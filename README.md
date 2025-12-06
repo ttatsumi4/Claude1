@@ -1,60 +1,70 @@
-# 📚 図書館 本管理アプリ
+# 📚 図書館 本管理アプリ（GitHub Pages版）
 
 図書館で借りた本の履歴を管理できるWebアプリケーションです。ISBNコードを入力するだけで、書籍の詳細情報を自動取得し、簡単に借用記録を管理できます。
 
+**🌐 完全静的サイト版** - GitHub Pagesやその他の静的ホスティングサービスで動作します！
+
 ## 🌟 主な機能
 
-- **ISBN検索**: ISBNコードを入力して書籍情報を自動取得
+- **ISBN検索**: ISBNコードを入力して書籍情報を自動取得（Google Books API使用）
 - **本の登録**: 借りた本の情報を簡単に記録
 - **履歴管理**: 借用中・返却済みの本を一覧表示
 - **情報更新**: 返却日やメモの更新が可能
 - **フィルター機能**: すべて・借用中・返却済みで絞り込み表示
+- **オフライン対応**: データはブラウザのlocalStorageに保存
 
 ## 🚀 使用技術
 
-- **バックエンド**: Node.js, Express
-- **データベース**: SQLite3
 - **フロントエンド**: HTML5, CSS3, JavaScript (Vanilla)
+- **データ保存**: localStorage (ブラウザローカルストレージ)
 - **外部API**: Google Books API (ISBN検索)
+- **ホスティング**: GitHub Pages対応（静的サイト）
 
-## 📋 必要要件
+## 🌐 GitHub Pagesでのデプロイ方法
 
-- Node.js (v14以上推奨)
-- npm (Node Package Manager)
+### 1. リポジトリ設定
 
-## 🔧 インストール方法
+1. GitHubリポジトリの **Settings** → **Pages** にアクセス
+2. **Source** で以下を選択:
+   - Branch: `main` (または使用しているブランチ)
+   - Folder: `/public`
+3. **Save** をクリック
+4. 数分後、`https://ユーザー名.github.io/リポジトリ名/` でアクセス可能になります
 
-1. リポジトリをクローン
+### 2. カスタムドメインの設定（オプション）
+
+GitHub PagesのSettings内でカスタムドメインを設定できます。
+
+## 💻 ローカルでの起動方法
+
+### 方法1: http-serverを使用（推奨）
+
 ```bash
-git clone <repository-url>
-cd Claude1
-```
-
-2. 依存パッケージをインストール
-```bash
+# 依存パッケージをインストール（初回のみ）
 npm install
-```
 
-## ▶️ 起動方法
-
-### 本番モード
-```bash
+# サーバーを起動
 npm start
 ```
 
-### 開発モード (ファイル変更時に自動再起動)
+ブラウザで自動的に `http://localhost:3000` が開きます。
+
+### 方法2: 直接HTMLファイルを開く
+
 ```bash
-npm run dev
+# publicディレクトリのindex.htmlをブラウザで開く
+open public/index.html
+# または
+start public/index.html  # Windows
+xdg-open public/index.html  # Linux
 ```
 
-サーバーが起動したら、ブラウザで以下にアクセス:
-```
-http://localhost:3000
-```
+**注意**: Google Books APIのCORS制限により、ファイルを直接開く方法ではISBN検索が動作しない場合があります。その場合は方法1を使用してください。
 
 ## 📖 使い方
 
 ### 1. ISBNで本を検索
+
 - ISBNコード (13桁または10桁) を入力
 - 「検索」ボタンをクリック
 - 書籍情報が自動的に表示されます
@@ -62,10 +72,12 @@ http://localhost:3000
 例: `9784797395846`
 
 ### 2. 本を登録
+
 - 検索結果が表示されたら、借りた日とメモ(オプション)を入力
 - 「登録する」ボタンをクリック
 
 ### 3. 本の一覧を確認
+
 - 登録した本が一覧で表示されます
 - フィルターボタンで表示を絞り込めます
   - **すべて**: 全ての本を表示
@@ -73,11 +85,13 @@ http://localhost:3000
   - **返却済み**: 返却した本のみ表示
 
 ### 4. 本の情報を更新
+
 - 本のカードの「更新」ボタンをクリック
 - 返却日、ステータス、メモを編集
 - 「更新する」ボタンをクリック
 
 ### 5. 本を削除
+
 - 本のカードの「削除」ボタンをクリック
 - 確認ダイアログで「OK」をクリック
 
@@ -85,85 +99,33 @@ http://localhost:3000
 
 ```
 Claude1/
-├── server.js           # バックエンドサーバー (Express)
-├── package.json        # npm設定ファイル
-├── library.db          # SQLiteデータベース (自動作成)
+├── package.json        # npm設定ファイル（開発用）
 ├── .gitignore         # Git除外設定
 ├── README.md          # このファイル
-└── public/            # 静的ファイル
+└── public/            # 静的ファイル（GitHub Pagesで公開）
     ├── index.html     # メインHTML
     ├── style.css      # スタイルシート
     └── app.js         # フロントエンドJavaScript
 ```
 
-## 🔌 API エンドポイント
+## 💾 データの保存について
 
-### ISBN検索
-```
-GET /api/isbn/:isbn
-```
-指定されたISBNの書籍情報を取得
+### localStorage使用
 
-### 本の一覧取得
-```
-GET /api/books
-```
-登録されている全ての本を取得
+- データはブラウザの **localStorage** に保存されます
+- **メリット**:
+  - サーバー不要で完全無料
+  - GitHub Pagesで動作
+  - 高速なデータアクセス
 
-### 本の追加
-```
-POST /api/books
-Content-Type: application/json
+- **注意点**:
+  - データはブラウザごとに保存されます（Chrome、Safari、Firefoxなどで別々）
+  - ブラウザのデータを消去するとアプリのデータも削除されます
+  - 別のデバイスやブラウザではデータを共有できません
 
-{
-  "isbn": "9784797395846",
-  "title": "書籍名",
-  "authors": "著者名",
-  "publisher": "出版社",
-  "published_date": "2020-01-01",
-  "description": "説明",
-  "thumbnail": "画像URL",
-  "borrow_date": "2024-01-01",
-  "notes": "メモ"
-}
-```
+### データのバックアップ
 
-### 本の更新
-```
-PUT /api/books/:id
-Content-Type: application/json
-
-{
-  "return_date": "2024-01-15",
-  "status": "returned",
-  "notes": "更新されたメモ"
-}
-```
-
-### 本の削除
-```
-DELETE /api/books/:id
-```
-
-## 📊 データベーススキーマ
-
-```sql
-CREATE TABLE borrowed_books (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  isbn TEXT NOT NULL,
-  title TEXT NOT NULL,
-  authors TEXT,
-  publisher TEXT,
-  published_date TEXT,
-  description TEXT,
-  thumbnail TEXT,
-  borrow_date TEXT NOT NULL,
-  return_date TEXT,
-  status TEXT DEFAULT 'borrowed',
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+ブラウザの開発者ツール（F12）→ Application → Local Storage から手動でデータをコピーして保存できます。
 
 ## 💡 ISBNについて
 
@@ -176,16 +138,37 @@ ISBN (International Standard Book Number) は、書籍を識別するための�
 
 ## 🎨 特徴
 
+- **完全静的サイト**: サーバー不要で動作
+- **GitHub Pages対応**: 無料でホスティング可能
 - **レスポンシブデザイン**: スマートフォンでも快適に使用可能
 - **直感的なUI**: シンプルで分かりやすい操作画面
 - **自動データ取得**: Google Books APIから書籍情報を自動取得
-- **データ永続化**: SQLiteで確実にデータを保存
+- **XSS対策**: HTMLエスケープ処理を実装
 
 ## 🔒 注意事項
 
-- インターネット接続が必要です (ISBN検索時)
+- インターネット接続が必要です（ISBN検索時）
 - Google Books APIの利用制限があるため、短時間に大量のリクエストは避けてください
-- データベースファイル (`library.db`) は自動生成されます
+- データはブラウザのlocalStorageに保存されるため、ブラウザのデータ消去に注意してください
+- プライベートブラウジングモード（シークレットモード）では、終了時にデータが削除されます
+
+## 📊 バージョン履歴
+
+### v2.0.0 (GitHub Pages対応版)
+- localStorageを使用した完全静的サイト化
+- サーバー不要でGitHub Pagesで動作
+- フロントエンドから直接Google Books APIを呼び出し
+
+### v1.0.0 (初期バージョン)
+- Node.js + Express + SQLiteによるフルスタック実装
+
+## 🤝 対応ブラウザ
+
+- Chrome（推奨）
+- Firefox
+- Safari
+- Edge
+- その他モダンブラウザ
 
 ## 📝 ライセンス
 

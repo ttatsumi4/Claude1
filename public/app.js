@@ -1,5 +1,5 @@
-// API ベースURL
-const API_BASE = '/api';
+// ローカルストレージのキー
+const STORAGE_KEY = 'libraryBooks';
 
 // DOM要素
 const isbnInput = document.getElementById('isbnInput');
@@ -52,7 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('borrowDate').valueAsDate = new Date();
 });
 
-// ISBNで本を検索
+// ローカルストレージから本のデータを取得
+function getBooksFromStorage() {
+  const booksJson = localStorage.getItem(STORAGE_KEY);
+  return booksJson ? JSON.parse(booksJson) : [];
+}
+
+// ローカルストレージに本のデータを保存
+function saveBooksToStorage(books) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+}
+
+// 次のIDを生成
+function getNextId() {
+  const books = getBooksFromStorage();
+  if (books.length === 0) return 1;
+  return Math.max(...books.map(b => b.id)) + 1;
+}
+
+// ISBNで本を検索 (Google Books APIを直接呼び出し)
 async function searchByISBN() {
   const isbn = isbnInput.value.trim();
 
@@ -66,16 +84,35 @@ async function searchByISBN() {
   searchResult.innerHTML = '';
 
   try {
-    const response = await fetch(`${API_BASE}/isbn/${isbn}`);
-    const data = await response.json();
+    // Google Books APIを直接呼び出し
+    const response = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`
+    );
 
     if (!response.ok) {
-      throw new Error(data.error || '書籍情報の取得に失敗しました');
+      throw new Error('書籍情報の取得に失敗しました');
     }
 
-    currentBookData = data;
-    displaySearchResult(data);
-    showAddSection(data);
+    const data = await response.json();
+
+    if (data.totalItems === 0) {
+      throw new Error('書籍が見つかりませんでした');
+    }
+
+    const bookData = data.items[0].volumeInfo;
+    const book = {
+      isbn: isbn,
+      title: bookData.title || '不明',
+      authors: bookData.authors ? bookData.authors.join(', ') : '不明',
+      publisher: bookData.publisher || '不明',
+      published_date: bookData.publishedDate || '不明',
+      description: bookData.description || '',
+      thumbnail: bookData.imageLinks?.thumbnail || ''
+    };
+
+    currentBookData = book;
+    displaySearchResult(book);
+    showAddSection(book);
   } catch (error) {
     showError(error.message);
     addSection.style.display = 'none';
@@ -91,12 +128,12 @@ function displaySearchResult(book) {
     <div class="book-preview">
       ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${book.title}">` : '<div style="width: 120px; height: 160px; background: #ddd; display: flex; align-items: center; justify-content: center; border-radius: 5px;">画像なし</div>'}
       <div class="book-preview-info">
-        <h3>${book.title}</h3>
-        <p><strong>著者:</strong> ${book.authors}</p>
-        <p><strong>出版社:</strong> ${book.publisher}</p>
-        <p><strong>出版日:</strong> ${book.published_date}</p>
-        <p><strong>ISBN:</strong> ${book.isbn}</p>
-        ${book.description ? `<p><strong>説明:</strong> ${book.description.substring(0, 200)}${book.description.length > 200 ? '...' : ''}</p>` : ''}
+        <h3>${escapeHtml(book.title)}</h3>
+        <p><strong>著者:</strong> ${escapeHtml(book.authors)}</p>
+        <p><strong>出版社:</strong> ${escapeHtml(book.publisher)}</p>
+        <p><strong>出版日:</strong> ${escapeHtml(book.published_date)}</p>
+        <p><strong>ISBN:</strong> ${escapeHtml(book.isbn)}</p>
+        ${book.description ? `<p><strong>説明:</strong> ${escapeHtml(book.description.substring(0, 200))}${book.description.length > 200 ? '...' : ''}</p>` : ''}
       </div>
     </div>
   `;
@@ -118,11 +155,13 @@ function showAddSection(book) {
   addSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 本を追加
-async function addBook(e) {
+// 本を追加 (ローカルストレージに保存)
+function addBook(e) {
   e.preventDefault();
 
-  const bookData = {
+  const books = getBooksFromStorage();
+  const newBook = {
+    id: getNextId(),
     isbn: document.getElementById('bookIsbn').value,
     title: document.getElementById('bookTitle').value,
     authors: document.getElementById('bookAuthors').value,
@@ -131,54 +170,35 @@ async function addBook(e) {
     description: document.getElementById('bookDescription').value,
     thumbnail: document.getElementById('bookThumbnail').value,
     borrow_date: document.getElementById('borrowDate').value,
-    notes: document.getElementById('bookNotes').value
+    return_date: null,
+    status: 'borrowed',
+    notes: document.getElementById('bookNotes').value,
+    created_at: new Date().toISOString()
   };
 
-  try {
-    const response = await fetch(`${API_BASE}/books`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(bookData)
-    });
+  books.push(newBook);
+  saveBooksToStorage(books);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || '本の追加に失敗しました');
-    }
-
-    showSuccess('本を追加しました');
-    addBookForm.reset();
-    addSection.style.display = 'none';
-    searchResult.innerHTML = '';
-    isbnInput.value = '';
-    document.getElementById('borrowDate').valueAsDate = new Date();
-    loadBooks();
-  } catch (error) {
-    showError(error.message);
-  }
+  showSuccess('本を追加しました');
+  addBookForm.reset();
+  addSection.style.display = 'none';
+  searchResult.innerHTML = '';
+  isbnInput.value = '';
+  document.getElementById('borrowDate').valueAsDate = new Date();
+  loadBooks();
 }
 
-// 借りた本の一覧を読み込み
-async function loadBooks() {
-  try {
-    const response = await fetch(`${API_BASE}/books`);
-    const books = await response.json();
-
-    if (!response.ok) {
-      throw new Error('本の一覧の取得に失敗しました');
-    }
-
-    displayBooks(books);
-  } catch (error) {
-    showError(error.message);
-  }
+// 借りた本の一覧を読み込み (ローカルストレージから)
+function loadBooks() {
+  const books = getBooksFromStorage();
+  displayBooks(books);
 }
 
 // 本の一覧を表示
 function displayBooks(books) {
+  // 作成日時の降順でソート
+  books.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
   // フィルター適用
   let filteredBooks = books;
   if (currentFilter !== 'all') {
@@ -193,17 +213,17 @@ function displayBooks(books) {
   const html = filteredBooks.map(book => `
     <div class="book-card">
       <div class="book-card-header">
-        ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${book.title}">` : '<div style="width: 80px; height: 100px; background: #ddd; border-radius: 5px;"></div>'}
+        ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${escapeHtml(book.title)}">` : '<div style="width: 80px; height: 100px; background: #ddd; border-radius: 5px;"></div>'}
         <div class="book-card-title">
-          <h3>${book.title}</h3>
-          <p>${book.authors}</p>
+          <h3>${escapeHtml(book.title)}</h3>
+          <p>${escapeHtml(book.authors)}</p>
         </div>
       </div>
       <div class="book-card-info">
-        <p><strong>ISBN:</strong> ${book.isbn}</p>
+        <p><strong>ISBN:</strong> ${escapeHtml(book.isbn)}</p>
         <p><strong>借りた日:</strong> ${formatDate(book.borrow_date)}</p>
         ${book.return_date ? `<p><strong>返却日:</strong> ${formatDate(book.return_date)}</p>` : ''}
-        ${book.notes ? `<p><strong>メモ:</strong> ${book.notes}</p>` : ''}
+        ${book.notes ? `<p><strong>メモ:</strong> ${escapeHtml(book.notes)}</p>` : ''}
         <span class="status-badge status-${book.status}">
           ${book.status === 'borrowed' ? '借用中' : '返却済み'}
         </span>
@@ -219,83 +239,59 @@ function displayBooks(books) {
 }
 
 // 更新モーダルを開く
-async function openUpdateModal(id) {
-  try {
-    const response = await fetch(`${API_BASE}/books`);
-    const books = await response.json();
-    const book = books.find(b => b.id === id);
+function openUpdateModal(id) {
+  const books = getBooksFromStorage();
+  const book = books.find(b => b.id === id);
 
-    if (!book) {
-      throw new Error('本が見つかりませんでした');
-    }
-
-    document.getElementById('updateBookId').value = book.id;
-    document.getElementById('updateReturnDate').value = book.return_date || '';
-    document.getElementById('updateStatus').value = book.status;
-    document.getElementById('updateNotes').value = book.notes || '';
-
-    updateModal.style.display = 'block';
-  } catch (error) {
-    showError(error.message);
+  if (!book) {
+    showError('本が見つかりませんでした');
+    return;
   }
+
+  document.getElementById('updateBookId').value = book.id;
+  document.getElementById('updateReturnDate').value = book.return_date || '';
+  document.getElementById('updateStatus').value = book.status;
+  document.getElementById('updateNotes').value = book.notes || '';
+
+  updateModal.style.display = 'block';
 }
 
-// 本の情報を更新
-async function updateBook(e) {
+// 本の情報を更新 (ローカルストレージ)
+function updateBook(e) {
   e.preventDefault();
 
-  const id = document.getElementById('updateBookId').value;
-  const updateData = {
-    return_date: document.getElementById('updateReturnDate').value,
-    status: document.getElementById('updateStatus').value,
-    notes: document.getElementById('updateNotes').value
-  };
+  const id = parseInt(document.getElementById('updateBookId').value);
+  const books = getBooksFromStorage();
+  const bookIndex = books.findIndex(b => b.id === id);
 
-  try {
-    const response = await fetch(`${API_BASE}/books/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updateData)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || '本の更新に失敗しました');
-    }
-
-    showSuccess('本の情報を更新しました');
-    updateModal.style.display = 'none';
-    loadBooks();
-  } catch (error) {
-    showError(error.message);
+  if (bookIndex === -1) {
+    showError('本が見つかりませんでした');
+    return;
   }
+
+  books[bookIndex].return_date = document.getElementById('updateReturnDate').value;
+  books[bookIndex].status = document.getElementById('updateStatus').value;
+  books[bookIndex].notes = document.getElementById('updateNotes').value;
+
+  saveBooksToStorage(books);
+
+  showSuccess('本の情報を更新しました');
+  updateModal.style.display = 'none';
+  loadBooks();
 }
 
-// 本を削除
-async function deleteBook(id) {
+// 本を削除 (ローカルストレージから)
+function deleteBook(id) {
   if (!confirm('この本を削除してもよろしいですか?')) {
     return;
   }
 
-  try {
-    const response = await fetch(`${API_BASE}/books/${id}`, {
-      method: 'DELETE'
-    });
+  const books = getBooksFromStorage();
+  const filteredBooks = books.filter(b => b.id !== id);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || '本の削除に失敗しました');
-    }
-
-    showSuccess('本を削除しました');
-    loadBooks();
-  } catch (error) {
-    showError(error.message);
-  }
+  saveBooksToStorage(filteredBooks);
+  showSuccess('本を削除しました');
+  loadBooks();
 }
 
 // 日付をフォーマット
@@ -305,9 +301,16 @@ function formatDate(dateString) {
   return date.toLocaleDateString('ja-JP');
 }
 
+// HTMLエスケープ（XSS対策）
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 // エラーメッセージを表示
 function showError(message) {
-  searchResult.innerHTML = `<div class="error-message">${message}</div>`;
+  searchResult.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
   setTimeout(() => {
     if (searchResult.innerHTML.includes('error-message')) {
       searchResult.innerHTML = '';
