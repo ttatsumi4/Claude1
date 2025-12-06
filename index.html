@@ -58,6 +58,27 @@
           </div>
 
           <div class="form-group">
+            <label>ステータス:</label>
+            <select id="bookStatus">
+              <option value="borrowed">借用中</option>
+              <option value="returned">返却済み</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="returnDateGroup" style="display: none;">
+            <label>返却予定日:</label>
+            <input type="date" id="bookReturnDate" />
+          </div>
+
+          <div class="form-group">
+            <label>読書状況:</label>
+            <select id="bookReadingStatus">
+              <option value="unread">未読</option>
+              <option value="finished">完読</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label>メモ:</label>
             <textarea id="bookNotes" rows="3" placeholder="メモを入力してください"></textarea>
           </div>
@@ -69,10 +90,23 @@
       <!-- 借りた本の一覧 -->
       <section class="books-section">
         <h2>借りた本の一覧</h2>
-        <div class="filter-buttons">
-          <button class="filter-btn active" data-filter="all">すべて</button>
-          <button class="filter-btn" data-filter="borrowed">借用中</button>
-          <button class="filter-btn" data-filter="returned">返却済み</button>
+        <div class="filter-section">
+          <div class="filter-group">
+            <label>ステータス:</label>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter-type="status" data-filter="all">すべて</button>
+              <button class="filter-btn" data-filter-type="status" data-filter="borrowed">借用中</button>
+              <button class="filter-btn" data-filter-type="status" data-filter="returned">返却済み</button>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>読書状況:</label>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter-type="reading" data-filter="all">すべて</button>
+              <button class="filter-btn" data-filter-type="reading" data-filter="unread">未読</button>
+              <button class="filter-btn" data-filter-type="reading" data-filter="finished">完読</button>
+            </div>
+          </div>
         </div>
         <div id="booksList" class="books-list"></div>
       </section>
@@ -96,6 +130,14 @@
             <select id="updateStatus">
               <option value="borrowed">借用中</option>
               <option value="returned">返却済み</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>読書状況:</label>
+            <select id="updateReadingStatus">
+              <option value="unread">未読</option>
+              <option value="finished">完読</option>
             </select>
           </div>
 

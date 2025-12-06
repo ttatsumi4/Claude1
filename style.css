@@ -188,10 +188,26 @@ section h2 {
 }
 
 /* 本のリスト */
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  margin-bottom: 15px;
+}
+
+.filter-group > label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+}
+
 .filter-buttons {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -270,13 +286,19 @@ section h2 {
   font-size: 0.9em;
 }
 
+.badge-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
 .status-badge {
   display: inline-block;
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.85em;
   font-weight: 600;
-  margin-top: 5px;
 }
 
 .status-borrowed {
@@ -286,6 +308,24 @@ section h2 {
 
 .status-returned {
   background: #4caf50;
+  color: white;
+}
+
+.reading-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.reading-unread {
+  background: #ff9800;
+  color: white;
+}
+
+.reading-finished {
+  background: #2196f3;
   color: white;
 }
 

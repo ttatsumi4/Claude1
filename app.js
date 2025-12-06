@@ -14,7 +14,8 @@ const closeModal = document.querySelector('.close');
 const filterBtns = document.querySelectorAll('.filter-btn');
 
 // 現在のフィルター
-let currentFilter = 'all';
+let currentStatusFilter = 'all';
+let currentReadingFilter = 'all';
 
 // 現在の本のデータ
 let currentBookData = null;
@@ -36,13 +37,37 @@ window.addEventListener('click', (e) => {
     updateModal.style.display = 'none';
   }
 });
+
+// フィルターボタンのイベントリスナー（更新）
 filterBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    filterBtns.forEach(b => b.classList.remove('active'));
+    const filterType = btn.dataset.filterType;
+    const filterValue = btn.dataset.filter;
+
+    // 同じタイプのボタンのactiveを解除
+    document.querySelectorAll(`[data-filter-type="${filterType}"]`).forEach(b => {
+      b.classList.remove('active');
+    });
     btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
+
+    if (filterType === 'status') {
+      currentStatusFilter = filterValue;
+    } else if (filterType === 'reading') {
+      currentReadingFilter = filterValue;
+    }
+
     loadBooks();
   });
+});
+
+// ステータス変更時のイベントリスナー
+document.getElementById('bookStatus').addEventListener('change', (e) => {
+  const returnDateGroup = document.getElementById('returnDateGroup');
+  if (e.target.value === 'borrowed') {
+    returnDateGroup.style.display = 'block';
+  } else {
+    returnDateGroup.style.display = 'none';
+  }
 });
 
 // 初期化
@@ -160,6 +185,9 @@ function addBook(e) {
   e.preventDefault();
 
   const books = getBooksFromStorage();
+  const status = document.getElementById('bookStatus').value;
+  const returnDate = document.getElementById('bookReturnDate').value;
+
   const newBook = {
     id: getNextId(),
     isbn: document.getElementById('bookIsbn').value,
@@ -170,8 +198,9 @@ function addBook(e) {
     description: document.getElementById('bookDescription').value,
     thumbnail: document.getElementById('bookThumbnail').value,
     borrow_date: document.getElementById('borrowDate').value,
-    return_date: null,
-    status: 'borrowed',
+    return_date: status === 'borrowed' && returnDate ? returnDate : null,
+    status: status,
+    reading_status: document.getElementById('bookReadingStatus').value,
     notes: document.getElementById('bookNotes').value,
     created_at: new Date().toISOString()
   };
@@ -185,6 +214,7 @@ function addBook(e) {
   searchResult.innerHTML = '';
   isbnInput.value = '';
   document.getElementById('borrowDate').valueAsDate = new Date();
+  document.getElementById('returnDateGroup').style.display = 'none';
   loadBooks();
 }
 
@@ -201,12 +231,19 @@ function displayBooks(books) {
 
   // フィルター適用
   let filteredBooks = books;
-  if (currentFilter !== 'all') {
-    filteredBooks = books.filter(book => book.status === currentFilter);
+
+  // ステータスフィルター
+  if (currentStatusFilter !== 'all') {
+    filteredBooks = filteredBooks.filter(book => book.status === currentStatusFilter);
+  }
+
+  // 読書状況フィルター
+  if (currentReadingFilter !== 'all') {
+    filteredBooks = filteredBooks.filter(book => (book.reading_status || 'unread') === currentReadingFilter);
   }
 
   if (filteredBooks.length === 0) {
-    booksList.innerHTML = '<div class="empty-state"><p>まだ本が登録されていません</p></div>';
+    booksList.innerHTML = '<div class="empty-state"><p>条件に合う本が見つかりませんでした</p></div>';
     return;
   }
 
@@ -222,11 +259,16 @@ function displayBooks(books) {
       <div class="book-card-info">
         <p><strong>ISBN:</strong> ${escapeHtml(book.isbn)}</p>
         <p><strong>借りた日:</strong> ${formatDate(book.borrow_date)}</p>
-        ${book.return_date ? `<p><strong>返却日:</strong> ${formatDate(book.return_date)}</p>` : ''}
+        ${book.return_date ? `<p><strong>返却予定日:</strong> ${formatDate(book.return_date)}</p>` : ''}
         ${book.notes ? `<p><strong>メモ:</strong> ${escapeHtml(book.notes)}</p>` : ''}
-        <span class="status-badge status-${book.status}">
-          ${book.status === 'borrowed' ? '借用中' : '返却済み'}
-        </span>
+        <div class="badge-group">
+          <span class="status-badge status-${book.status}">
+            ${book.status === 'borrowed' ? '借用中' : '返却済み'}
+          </span>
+          <span class="reading-badge reading-${book.reading_status || 'unread'}">
+            ${(book.reading_status || 'unread') === 'finished' ? '完読' : '未読'}
+          </span>
+        </div>
       </div>
       <div class="book-card-actions">
         <button class="btn btn-update" onclick="openUpdateModal(${book.id})">更新</button>
@@ -251,6 +293,7 @@ function openUpdateModal(id) {
   document.getElementById('updateBookId').value = book.id;
   document.getElementById('updateReturnDate').value = book.return_date || '';
   document.getElementById('updateStatus').value = book.status;
+  document.getElementById('updateReadingStatus').value = book.reading_status || 'unread';
   document.getElementById('updateNotes').value = book.notes || '';
 
   updateModal.style.display = 'block';
@@ -271,6 +314,7 @@ function updateBook(e) {
 
   books[bookIndex].return_date = document.getElementById('updateReturnDate').value;
   books[bookIndex].status = document.getElementById('updateStatus').value;
+  books[bookIndex].reading_status = document.getElementById('updateReadingStatus').value;
   books[bookIndex].notes = document.getElementById('updateNotes').value;
 
   saveBooksToStorage(books);
