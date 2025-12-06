@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "図書館で借りた本の履歴を管理するアプリケーション（GitHub Pages対応版）",
   "scripts": {
-    "start": "npx http-server public -p 3000 -o"
+    "start": "npx http-server . -p 3000 -o"
   },
   "keywords": ["library", "books", "ISBN", "tracker", "github-pages"],
   "author": "",

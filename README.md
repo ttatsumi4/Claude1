@@ -27,7 +27,7 @@
 1. GitHubリポジトリの **Settings** → **Pages** にアクセス
 2. **Source** で以下を選択:
    - Branch: `main` (または使用しているブランチ)
-   - Folder: `/public`
+   - Folder: `/` (root)
 3. **Save** をクリック
 4. 数分後、`https://ユーザー名.github.io/リポジトリ名/` でアクセス可能になります
 
@@ -52,11 +52,11 @@ npm start
 ### 方法2: 直接HTMLファイルを開く
 
 ```bash
-# publicディレクトリのindex.htmlをブラウザで開く
-open public/index.html
+# index.htmlをブラウザで開く
+open index.html
 # または
-start public/index.html  # Windows
-xdg-open public/index.html  # Linux
+start index.html  # Windows
+xdg-open index.html  # Linux
 ```
 
 **注意**: Google Books APIのCORS制限により、ファイルを直接開く方法ではISBN検索が動作しない場合があります。その場合は方法1を使用してください。
@@ -102,10 +102,9 @@ Claude1/
 ├── package.json        # npm設定ファイル（開発用）
 ├── .gitignore         # Git除外設定
 ├── README.md          # このファイル
-└── public/            # 静的ファイル（GitHub Pagesで公開）
-    ├── index.html     # メインHTML
-    ├── style.css      # スタイルシート
-    └── app.js         # フロントエンドJavaScript
+├── index.html         # メインHTML
+├── style.css          # スタイルシート
+└── app.js             # フロントエンドJavaScript
 ```
 
 ## 💾 データの保存について
