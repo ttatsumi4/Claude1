@@ -247,8 +247,10 @@ function displayBooks(books) {
     return;
   }
 
-  const html = filteredBooks.map(book => `
-    <div class="book-card">
+  const html = filteredBooks.map(book => {
+    const isNearReturn = isReturnDateNear(book.return_date, book.status);
+    return `
+    <div class="book-card ${isNearReturn ? 'return-warning' : ''}">
       <div class="book-card-header">
         ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${escapeHtml(book.title)}">` : '<div style="width: 80px; height: 100px; background: #ddd; border-radius: 5px;"></div>'}
         <div class="book-card-title">
@@ -259,7 +261,7 @@ function displayBooks(books) {
       <div class="book-card-info">
         <p><strong>ISBN:</strong> ${escapeHtml(book.isbn)}</p>
         <p><strong>借りた日:</strong> ${formatDate(book.borrow_date)}</p>
-        ${book.return_date ? `<p><strong>返却予定日:</strong> ${formatDate(book.return_date)}</p>` : ''}
+        ${book.return_date ? `<p class="${isNearReturn ? 'return-date-warning' : ''}"><strong>返却予定日:</strong> ${formatDate(book.return_date)} ${isNearReturn ? '⚠️' : ''}</p>` : ''}
         ${book.notes ? `<p><strong>メモ:</strong> ${escapeHtml(book.notes)}</p>` : ''}
         <div class="badge-group">
           <span class="status-badge status-${book.status}">
@@ -275,7 +277,8 @@ function displayBooks(books) {
         <button class="btn btn-delete" onclick="deleteBook(${book.id})">削除</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   booksList.innerHTML = html;
 }
@@ -343,6 +346,23 @@ function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('ja-JP');
+}
+
+// 返却日が3日以内かチェック
+function isReturnDateNear(returnDate, status) {
+  if (!returnDate || status !== 'borrowed') return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // 時刻をリセット
+
+  const returnDateObj = new Date(returnDate);
+  returnDateObj.setHours(0, 0, 0, 0);
+
+  const diffTime = returnDateObj - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // 返却日が3日以内（今日を含む）、または過ぎている場合
+  return diffDays >= 0 && diffDays <= 3;
 }
 
 // HTMLエスケープ（XSS対策）
