@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>図書館 本管理アプリ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 図書館 本管理アプリ</h1>
+      <p>借りた本の履歴を管理できます</p>
+    </header>
+
+    <main>
+      <!-- ISBN検索セクション -->
+      <section class="search-section">
+        <h2>ISBNで本を検索</h2>
+        <div class="search-form">
+          <input type="text" id="isbnInput" placeholder="ISBNコードを入力 (例: 9784797395846)" />
+          <button id="searchBtn" class="btn btn-primary">検索</button>
+        </div>
+        <div id="searchResult" class="search-result"></div>
+      </section>
+
+      <!-- 本を追加セクション -->
+      <section class="add-section" id="addSection" style="display: none;">
+        <h2>本を登録</h2>
+        <form id="addBookForm">
+          <input type="hidden" id="bookIsbn" />
+          <input type="hidden" id="bookThumbnail" />
+          <input type="hidden" id="bookDescription" />
+
+          <div class="form-group">
+            <label>タイトル:</label>
+            <input type="text" id="bookTitle" required readonly />
+          </div>
+
+          <div class="form-group">
+            <label>著者:</label>
+            <input type="text" id="bookAuthors" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>出版社:</label>
+            <input type="text" id="bookPublisher" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>出版日:</label>
+            <input type="text" id="bookPublishedDate" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>借りた日:</label>
+            <input type="date" id="borrowDate" required />
+          </div>
+
+          <div class="form-group">
+            <label>メモ:</label>
+            <textarea id="bookNotes" rows="3" placeholder="メモを入力してください"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-success">登録する</button>
+        </form>
+      </section>
+
+      <!-- 借りた本の一覧 -->
+      <section class="books-section">
+        <h2>借りた本の一覧</h2>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">すべて</button>
+          <button class="filter-btn" data-filter="borrowed">借用中</button>
+          <button class="filter-btn" data-filter="returned">返却済み</button>
+        </div>
+        <div id="booksList" class="books-list"></div>
+      </section>
+    </main>
+
+    <!-- 更新モーダル -->
+    <div id="updateModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>本の情報を更新</h2>
+        <form id="updateBookForm">
+          <input type="hidden" id="updateBookId" />
+
+          <div class="form-group">
+            <label>返却日:</label>
+            <input type="date" id="updateReturnDate" />
+          </div>
+
+          <div class="form-group">
+            <label>ステータス:</label>
+            <select id="updateStatus">
+              <option value="borrowed">借用中</option>
+              <option value="returned">返却済み</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>メモ:</label>
+            <textarea id="updateNotes" rows="3"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-success">更新する</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
