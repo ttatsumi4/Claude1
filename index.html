@@ -57,25 +57,26 @@
             <input type="date" id="borrowDate" required />
           </div>
 
-          <div class="form-group">
-            <label>ステータス:</label>
-            <select id="bookStatus">
-              <option value="borrowed">借用中</option>
-              <option value="returned">返却済み</option>
-            </select>
-          </div>
+          <div class="form-row">
+            <div class="form-group-box">
+              <label>ステータス:</label>
+              <select id="bookStatus">
+                <option value="borrowed">借用中</option>
+                <option value="returned">返却済み</option>
+              </select>
+              <div class="form-group-sub" id="returnDateGroup" style="display: none;">
+                <label>返却予定日:</label>
+                <input type="date" id="bookReturnDate" />
+              </div>
+            </div>
 
-          <div class="form-group" id="returnDateGroup" style="display: none;">
-            <label>返却予定日:</label>
-            <input type="date" id="bookReturnDate" />
-          </div>
-
-          <div class="form-group">
-            <label>読書状況:</label>
-            <select id="bookReadingStatus">
-              <option value="unread">未読</option>
-              <option value="finished">完読</option>
-            </select>
+            <div class="form-group-box">
+              <label>読書状況:</label>
+              <select id="bookReadingStatus">
+                <option value="unread">未読</option>
+                <option value="finished">完読</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -125,20 +126,22 @@
             <input type="date" id="updateReturnDate" />
           </div>
 
-          <div class="form-group">
-            <label>ステータス:</label>
-            <select id="updateStatus">
-              <option value="borrowed">借用中</option>
-              <option value="returned">返却済み</option>
-            </select>
-          </div>
+          <div class="form-row">
+            <div class="form-group-box">
+              <label>ステータス:</label>
+              <select id="updateStatus">
+                <option value="borrowed">借用中</option>
+                <option value="returned">返却済み</option>
+              </select>
+            </div>
 
-          <div class="form-group">
-            <label>読書状況:</label>
-            <select id="updateReadingStatus">
-              <option value="unread">未読</option>
-              <option value="finished">完読</option>
-            </select>
+            <div class="form-group-box">
+              <label>読書状況:</label>
+              <select id="updateReadingStatus">
+                <option value="unread">未読</option>
+                <option value="finished">完読</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
